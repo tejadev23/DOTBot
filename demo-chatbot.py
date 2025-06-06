@@ -55,12 +55,19 @@ if query:
             st.subheader(f"📄 {res['standard_id']}")
 
             # Clean and show description
+# Construct better response
+            standard_id = res["standard_id"]
             desc_clean = clean_description(res["description"])
-            st.markdown(desc_clean)
+            highlighted_response = f"**{standard_id}** is the Construction Standard for **{desc_clean}**."
 
-            # Show image from GitHub
+# Show formatted result
+            st.markdown(highlighted_response)
+
+# Show image and link
             filename = res["files"][0]["filename"]
             raw_img_url = f"https://raw.githubusercontent.com/tejadev23/DOTBot/main/data/standards/{filename}"
+            st.markdown(f"[🔗 View Image in GitHub]({raw_img_url})")
             st.image(raw_img_url, width=500)
+
     else:
         st.warning("No results found. Try a different keyword.")
