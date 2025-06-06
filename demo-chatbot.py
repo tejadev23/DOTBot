@@ -1,20 +1,46 @@
 import streamlit as st
 import json
-import os
+import re
+from rapidfuzz import fuzz
 
 # Load metadata
 with open("standards_metadata.json", "r") as f:
     standards = json.load(f)
 
-# Build a simple search function
+# Fuzzy search function
 def search_standards(query):
-    results = []
+    query = query.lower()
+    exact_matches = []
+    fuzzy_matches = []
+
     for standard in standards:
         std_id = standard["standard_id"].lower()
         desc = standard["description"].lower()
-        if query.lower() in std_id or query.lower() in desc:
-            results.append(standard)
-    return results
+
+        # Priority 1: exact match
+        if query == std_id:
+            exact_matches.append((100, standard))
+            continue
+
+        # Priority 2: partial fuzzy match
+        score_id = fuzz.partial_ratio(query, std_id)
+        score_desc = fuzz.partial_ratio(query, desc)
+
+        if score_id > 85 or score_desc > 85:
+            fuzzy_matches.append((max(score_id, score_desc), standard))
+
+    # Combine exact matches (on top) + sorted fuzzy matches
+    results = exact_matches + sorted(fuzzy_matches, key=lambda x: x[0], reverse=True)
+    return [r[1] for r in results]
+
+
+# Description cleanup function
+def clean_description(text):
+    text = text.replace("\n", " ").strip()
+    text = re.sub(r'[^a-zA-Z0-9.,:/()\-\s]{2,}', '', text)  # remove weird symbols
+    text = re.sub(r'\s+', ' ', text)                        # remove extra spaces
+    text = re.sub(r'\b(?:hi|fam|way)\b', '', text, flags=re.IGNORECASE)
+    return text.strip()
 
 # Streamlit UI
 st.set_page_config(page_title="DOTBot Demo", page_icon="🚧")
@@ -27,9 +53,14 @@ if query:
     if results:
         for res in results:
             st.subheader(f"📄 {res['standard_id']}")
-            st.markdown(res["description"].replace("\n", " "))
-            img_path = os.path.join("CSD- Images", "test", res["files"][0]["filename"])  # adjust folder name
-            if os.path.exists(img_path):
-                st.image(img_path, width=500)
+
+            # Clean and show description
+            desc_clean = clean_description(res["description"])
+            st.markdown(desc_clean)
+
+            # Show image from GitHub
+            filename = res["files"][0]["filename"]
+            raw_img_url = f"https://raw.githubusercontent.com/tejadev23/DOTBot/main/data/standards/{filename}"
+            st.image(raw_img_url, width=500)
     else:
         st.warning("No results found. Try a different keyword.")
