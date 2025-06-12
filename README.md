@@ -12,7 +12,7 @@ Built with [Streamlit](https://streamlit.io) + [RapidFuzz](https://github.com/ma
 ## 🌐 Live Demo
 
 Access the Streamlit app here:  
-👉 [https://DOTBot.streamlit.app](https://dotbot-demo.streamlit.app/)
+👉 [https://DOTBot.streamlit.app](https://dotbot-demo1.streamlit.app/)
 
 ## 📦 Features
 
