@@ -1,14 +1,19 @@
 import streamlit as st
 import json
 import re
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from datetime import datetime, timedelta
 from rapidfuzz import fuzz
 
 # Load data
-with open("standards_metadata.json", "r") as f:
-    standards = json.load(f)
-with open("contractor_directory.json", "r") as f:
-    contractors = json.load(f)
+from assets.standards_metadata import standards_metadata
+from assets.contractor_directory import contractor_directory
+
+# optionally rename:
+standards = standards_metadata
+contractors = contractor_directory
 
 # ------------------------- INTENT & ENTITY PARSER -------------------------
 def parse_intent_and_entities(query):
