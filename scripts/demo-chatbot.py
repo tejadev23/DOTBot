@@ -347,52 +347,74 @@ def clean_description(text):
     return text.strip()
 
 # ------------------------- UI -------------------------
-st.set_page_config(page_title="DOTBot Demo", page_icon="🚧")
-st.title("🤖 DOTBot 1.2(Demo) – GDOT Assistant")
+from streamlit_chat import message
 
-# Module selection
-module = st.radio(
-    "Select a module to search:",
+st.set_page_config(page_title="DOTBot Demo", page_icon="🚧", layout="centered")
+st.markdown('<style>' + open('styles.css').read() + '</style>', unsafe_allow_html=True)
+
+st.markdown("<div class='chat-title'>🤖 DOTBot 1.2 (Demo) – GDOT Assistant</div>", unsafe_allow_html=True)
+
+if "selected_module" not in st.session_state:
+    st.session_state.selected_module = "GDOT Specifications"
+
+st.session_state.selected_module = st.selectbox(
+    "📦 Select a module to search:",
     ["Contractor Directory", "Construction Standards", "GDOT Specifications"],
-    horizontal=True
+    index=["Contractor Directory", "Construction Standards", "GDOT Specifications"].index(st.session_state.selected_module)
 )
 
-# Dynamic placeholder based on module
 placeholder_text = {
     "Contractor Directory": "Search for contractors, work classes, or expiry details...",
     "Construction Standards": "Search for construction standard IDs or descriptions...",
     "GDOT Specifications": "Search for specification sections (e.g., Section 149)..."
 }
-query = st.text_input(placeholder_text[module])
+
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {"role": "assistant", "content": "👋 Hi! I'm Mira, your GDOT Assistant. Please choose a module and ask your question."}
+    ]
+
+for i, msg in enumerate(st.session_state.messages):
+    message(msg["content"], is_user=(msg["role"] == "user"), key=str(i))
+
+query = st.chat_input(placeholder_text[st.session_state.selected_module])
 
 if query:
+    module = st.session_state.selected_module
+    st.session_state.messages.append({"role": "user", "content": query})
+
     if module == "Contractor Directory":
-        contractor_results = search_contractors(query)
-        if contractor_results:
-            show_contractor_results(contractor_results)
+        results = search_contractors(query)
+        if results:
+           response = "\n\n".join(
+    [f"🏗️ **{r.get('Vendor Name', 'Unknown')}** – "
+     f"Work Class: {', '.join(r.get('Work Classes', []))}, "
+     f"Expiry: {r.get('Prequalification Expiry', 'N/A')}" for r in results]
+)
+
         else:
-            st.warning("No matching contractors found.")
+            response = "⚠️ No matching contractors found."
 
     elif module == "Construction Standards":
-        standard_results = search_standards(query)
-        if standard_results:
-            st.markdown("### 📐 Construction Standards")
-            for res in standard_results:
-                st.subheader(f"📄 {res['standard_id']}")
-                desc_clean = clean_description(res["description"])
-                st.markdown(f"**{res['standard_id']}** is the Construction Standard for **{desc_clean}**.")
-
-                filename = res["files"][0]["filename"]
-                raw_img_url = f"https://raw.githubusercontent.com/tejadev23/DOTBot/main/data/standards/{filename}"
-                st.markdown(f"[🔗 View Image in NewTab]({raw_img_url})")
-                st.image(raw_img_url, width=500)
+        results = search_standards(query)
+        if results:
+            sections = []
+            for r in results:
+                desc = clean_description(r["description"])
+                image_url = f"https://raw.githubusercontent.com/tejadev23/DOTBot/main/data/standards/{r['files'][0]['filename']}"
+                sections.append(
+                    f"📄 **{r['standard_id']}** – {desc}\n[🔗 View Image]({image_url})"
+                )
+            response = "### 📐 Construction Standards\n\n" + "\n\n".join(sections)
         else:
-            st.warning("No matching standards found.")
+            response = "⚠️ No matching standards found."
 
     elif module == "GDOT Specifications":
-        spec_results = search_specifications(query)
-        if spec_results:
-            st.markdown("### 📘 GDOT Specification Manual")
-            show_specification_results(spec_results)
+        results = search_specifications(query)
+        if results:
+            response = show_specification_results(results, return_text=True)
         else:
-            st.warning("No matching specifications found.")
+            response = "⚠️ No matching specifications found."
+
+    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.rerun()

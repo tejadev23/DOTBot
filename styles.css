@@ -1,0 +1,51 @@
+body, .main, .block-container {
+    background-color: #0f0f0f !important;
+    color: #ffffff !important;
+    font-family: 'Segoe UI', 'Inter', sans-serif;
+}
+
+.chat-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    padding: 12px;
+    color: white;
+    background-color: #1c1c1c;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0,0,0,0.3);
+}
+
+.css-1aumxhk, .stMarkdown {
+    background-color: #1e1e1e !important;
+    border-radius: 10px !important;
+    padding: 14px !important;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #ffffff !important;
+    box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
+}
+
+.stChatInputContainer {
+    background-color: #161616 !important;
+    border-top: 1px solid #2a2a2a !important;
+    padding: 8px 0px !important;
+}
+
+input[type="text"] {
+    background-color: #0f0f0f !important;
+    color: white !important;
+    font-size: 14px !important;
+    border-radius: 8px !important;
+    border: 1px solid #2a2a2a !important;
+}
+
+input:focus {
+    border: 1px solid #555 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.css-1c7y2kd {
+    margin-bottom: 12px !important;
+}
