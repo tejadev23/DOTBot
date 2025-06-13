@@ -371,7 +371,7 @@ placeholder_text = {
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "👋 Hi! I'm Mira, your GDOT Assistant. Please choose a module and ask your question."}
+        {"role": "assistant", "content": "👋 Hi! I'm DOTBOT, your GDOT Assistant. Please choose a module and ask your question."}
     ]
 
 for i, msg in enumerate(st.session_state.messages):
