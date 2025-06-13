@@ -10,8 +10,9 @@ from rapidfuzz import fuzz
 # Load data
 from assets.standards_metadata import standards_metadata
 from assets.contractor_directory import contractor_directory
+from assets.gdot_specifications import gdot_specifications as specifications
 
-# optionally rename:
+# Optionally rename
 standards = standards_metadata
 contractors = contractor_directory
 
@@ -131,12 +132,10 @@ def search_contractors(query):
 
         # Fuzzy logic for vendor name
         if intent in ["vendor_detail", "fuzzy_vendor_name"]:
-            # Get highest fuzzy match across all contractors
             score = fuzz.partial_ratio(value, name)
             cname_score = fuzz.partial_ratio(value, cname)
             best_score = max(score, cname_score)
 
-            # Keep only strong matches (>85), perfect matches first
             if best_score >= 85:
                 contractor["__match_score"] = best_score
                 results.append(contractor)
@@ -152,7 +151,7 @@ def search_contractors(query):
             if value in wclass_str:
                 results.append(contractor)
 
-        # Fuzzy match work class by description (NEW!)
+        # Fuzzy match work class by description
         elif intent == "work_class_fuzzy_desc":
             for wc in wclasses:
                 parts = wc.split("–", 1)
@@ -163,7 +162,6 @@ def search_contractors(query):
                         break
 
         # Relative expiry filter
-        # Relative expiry (e.g., expiring in 90 days)
         elif intent == "expiry_relative":
             try:
                 expiry_date = datetime.strptime(expiry_str, "%b-%d-%Y")
@@ -172,7 +170,7 @@ def search_contractors(query):
             except:
                 continue
 
-        # Expiry before specific month/year (e.g., before Sept 2025)
+        # Expiry before specific month/year
         elif intent == "expiry_before":
             try:
                 target_date = datetime.strptime(value, "%B %Y")
@@ -182,7 +180,7 @@ def search_contractors(query):
             except:
                 continue
 
-        # Expiry after specific month/year (e.g., after July 2024)
+        # Expiry after specific month/year
         elif intent == "expiry_after":
             try:
                 target_date = datetime.strptime(value, "%B %Y")
@@ -191,7 +189,6 @@ def search_contractors(query):
                     results.append(contractor)
             except:
                 continue
-    
 
     return results
 
@@ -217,6 +214,34 @@ def show_contractor_results(results):
         source = res.get("Source", {})
         st.caption(f"📄 Source: {source.get('Doc', 'Unknown')} – Row {source.get('Row', '?')}")
 
+def show_specification_results(results):
+    for spec in results:
+        st.subheader(f"📘 Section {spec['section_id']} – {spec['section_title']}")
+        st.markdown(f"**Reference**: 2021 GDOT Standard Specifications, Page {spec['page_number']}")
+
+        # Initialize content to display
+        content = spec.get("content", "")
+        
+        # If subsections exist, format them
+        if spec.get("subsections"):
+            subsections = spec["subsections"]
+            for sub_id, sub_data in subsections.items():
+                content += f"\n\n**{sub_id} {sub_data['title']}**\n{sub_data['content']}"
+                # Add tables if present
+                if sub_data.get("tables"):
+                    for table in sub_data["tables"]:
+                        for table_part in table:
+                            st.table(table_part)
+
+        # Show short preview (first 800 characters)
+        preview = content[:800].strip()
+        preview = re.sub(r'\s+', ' ', preview)
+        st.markdown(f"> {preview}...")
+
+        # Show full content under expander
+        with st.expander("🔍 View Full Section"):
+            st.markdown(content)
+
 # ------------------------- STANDARDS SEARCH -------------------------
 def search_standards(query):
     query = query.lower()
@@ -240,6 +265,80 @@ def search_standards(query):
     results = exact_matches + sorted(fuzzy_matches, key=lambda x: x[0], reverse=True)
     return [r[1] for r in results]
 
+# ------------------------- SPECIFICATIONS SEARCH -------------------------
+def search_specifications(query):
+    results = []
+    query_clean = query.lower().strip()
+
+    # Try to extract direct section number like "Section 149" or "Section 104.03"
+    section_match = re.search(r'section\s+(\d{1,3}(?:\.\d{1,2})?)', query_clean)
+    if section_match:
+        target_section = section_match.group(1)
+        # Check if section or subsection exists
+        section_id = target_section.split('.')[0]
+        if section_id in specifications:
+            spec = specifications[section_id]
+            if '.' in target_section:
+                subsection_id = target_section
+                if subsection_id in spec["subsections"]:
+                    sub_data = spec["subsections"][subsection_id]
+                    return [{
+                        "section_id": section_id,
+                        "section_title": spec["title"],
+                        "page_number": sub_data["page"],
+                        "content": f"**{subsection_id} {sub_data['title']}**\n{sub_data['content']}",
+                        "subsections": None
+                    }]
+            else:
+                # Return main section
+                content = spec.get("content", "")
+                if spec.get("subsections"):
+                    for sub_id, sub_data in spec["subsections"].items():
+                        content += f"\n\n**{sub_id} {sub_data['title']}**\n{sub_data['content']}"
+                return [{
+                    "section_id": section_id,
+                    "section_title": spec["title"],
+                    "page_number": spec["page"],
+                    "content": content,
+                    "subsections": spec["subsections"]
+                }]
+
+    # Fallback: fuzzy matching across sections and subsections
+    for section_id, spec in specifications.items():
+        title = spec["title"].lower()
+        score_title = fuzz.partial_ratio(query_clean, title)
+        
+        # Check main section content
+        content = spec.get("content", "").lower()
+        score_content = fuzz.partial_ratio(query_clean, content)
+
+        # Check subsections
+        subsection_content = ""
+        for sub_id, sub_data in spec.get("subsections", {}).items():
+            sub_title = sub_data["title"].lower()
+            sub_content = sub_data["content"].lower()
+            score_sub_title = fuzz.partial_ratio(query_clean, sub_title)
+            score_sub_content = fuzz.partial_ratio(query_clean, sub_content)
+            if max(score_sub_title, score_sub_content) >= 75:
+                subsection_content += f"\n\n**{sub_id} {sub_data['title']}**\n{sub_data['content']}"
+                score_content = max(score_content, score_sub_title, score_sub_content)
+
+        # Combine scores
+        best_score = max(score_title, score_content)
+        if best_score >= 75:
+            result = {
+                "section_id": section_id,
+                "section_title": spec["title"],
+                "page_number": spec["page"],
+                "content": subsection_content or spec.get("content", ""),
+                "subsections": spec["subsections"] if subsection_content else None
+            }
+            results.append((best_score, result))
+
+    # Sort and limit to top 3 results
+    results.sort(key=lambda x: x[0], reverse=True)
+    return [r[1] for r in results[:3]]
+
 # ------------------------- CLEAN DESCRIPTION -------------------------
 def clean_description(text):
     text = text.replace("\n", " ").strip()
@@ -251,18 +350,33 @@ def clean_description(text):
 st.set_page_config(page_title="DOTBot Demo", page_icon="🚧")
 st.title("🤖 DOTBot 1.2(Demo) – GDOT Assistant")
 
-query = st.text_input("Ask anything from Vendor Directory or about Construction Standards:")
+# Module selection
+module = st.radio(
+    "Select a module to search:",
+    ["Contractor Directory", "Construction Standards", "GDOT Specifications"],
+    horizontal=True
+)
+
+# Dynamic placeholder based on module
+placeholder_text = {
+    "Contractor Directory": "Search for contractors, work classes, or expiry details...",
+    "Construction Standards": "Search for construction standard IDs or descriptions...",
+    "GDOT Specifications": "Search for specification sections (e.g., Section 149)..."
+}
+query = st.text_input(placeholder_text[module])
 
 if query:
-    if any(word in query.lower() for word in ["vendor", "contractor", "class", "expire", "detail", "number", "info"]):
+    if module == "Contractor Directory":
         contractor_results = search_contractors(query)
         if contractor_results:
             show_contractor_results(contractor_results)
         else:
             st.warning("No matching contractors found.")
-    else:
+
+    elif module == "Construction Standards":
         standard_results = search_standards(query)
         if standard_results:
+            st.markdown("### 📐 Construction Standards")
             for res in standard_results:
                 st.subheader(f"📄 {res['standard_id']}")
                 desc_clean = clean_description(res["description"])
@@ -270,7 +384,15 @@ if query:
 
                 filename = res["files"][0]["filename"]
                 raw_img_url = f"https://raw.githubusercontent.com/tejadev23/DOTBot/main/data/standards/{filename}"
-                st.markdown(f"[🔗 View Image in GitHub]({raw_img_url})")
+                st.markdown(f"[🔗 View Image in NewTab]({raw_img_url})")
                 st.image(raw_img_url, width=500)
         else:
-            st.warning("No results found. Try a different keyword.")
+            st.warning("No matching standards found.")
+
+    elif module == "GDOT Specifications":
+        spec_results = search_specifications(query)
+        if spec_results:
+            st.markdown("### 📘 GDOT Specification Manual")
+            show_specification_results(spec_results)
+        else:
+            st.warning("No matching specifications found.")
