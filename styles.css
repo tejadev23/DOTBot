@@ -1,51 +1,197 @@
+/* Import Manrope font (Grok-like) from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap');
+
+/* Global styles */
 body, .main, .block-container {
-    background-color: #0f0f0f !important;
-    color: #ffffff !important;
-    font-family: 'Segoe UI', 'Inter', sans-serif;
+    background: linear-gradient(135deg, #0a0c1b 0%, #1a1e3a 100%) !important;
+    color: #d9e0ee !important;
+    font-family: 'Manrope', 'Inter', sans-serif !important;
+    font-size: 15px;
+    line-height: 1.7;
+    overflow-x: hidden;
 }
 
+/* Starry background effect */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.3)"/><circle cx="50" cy="50" r="1.5" fill="rgba(255,255,255,0.2)"/><circle cx="90" cy="90" r="1" fill="rgba(255,255,255,0.3)"/></svg>') repeat;
+    opacity: 0.1;
+    z-index: -1;
+}
+
+/* Chat title */
 .chat-title {
     text-align: center;
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 600;
-    padding: 12px;
-    color: white;
-    background-color: #1c1c1c;
-    margin-bottom: 20px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 6px rgba(0,0,0,0.3);
+    color: #ffffff;
+    background: rgba(20, 25, 50, 0.8);
+    padding: 16px;
+    border-radius: 12px;
+    margin: 0 auto 24px;
+    max-width: 700px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
 }
 
+/* Markdown containers */
 .css-1aumxhk, .stMarkdown {
-    background-color: #1e1e1e !important;
+    background: rgba(30, 35, 60, 0.9) !important;
     border-radius: 10px !important;
-    padding: 14px !important;
-    font-size: 15px;
-    line-height: 1.6;
+    padding: 16px !important;
+    color: #d9e0ee !important;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(3px);
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+    color: #7dd3fc !important; /* Grok-like light blue */
+    font-weight: 600;
+    margin-top: 12px;
+    margin-bottom: 8px;
+}
+h3 {
+    font-size: 22px; /* Module headers */
+}
+h4 {
+    font-size: 18px; /* Section titles */
+}
+
+/* Links (e.g., standards image URLs) */
+a, a:visited {
+    color: #7dd3fc !important;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+a:hover {
+    color: #b4e1ff !important;
+    text-decoration: underline;
+}
+
+/* Specification previews */
+blockquote {
+    background: rgba(40, 45, 70, 0.8) !important;
+    border-left: 4px solid #7dd3fc !important;
+    padding: 12px 16px !important;
+    margin: 12px 0;
+    font-style: italic;
+    color: #a3bffa !important;
+    border-radius: 6px;
+}
+
+/* Chat messages */
+.stChatMessage {
+    border-radius: 16px !important;
+    padding: 12px 16px !important;
+    margin: 8px 10% !important;
+    max-width: 80%;
+    animation: fadeIn 0.3s ease-in;
+}
+.stChatMessage[data-testid="stChatMessage-user"] {
+    background: linear-gradient(135deg, #7dd3fc 0%, #4f46e5 100%) !important;
     color: #ffffff !important;
-    box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
+    margin-left: 20% !important;
+    border: 1px solid rgba(125, 211, 252, 0.3);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.stChatMessage[data-testid="stChatMessage-assistant"] {
+    background: rgba(30, 35, 60, 0.9) !important;
+    color: #d9e0ee !important;
+    margin-right: 20% !important;
+    border: 1px solid rgba(79, 70, 229, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
+/* Fade-in animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Chat input */
 .stChatInputContainer {
-    background-color: #161616 !important;
-    border-top: 1px solid #2a2a2a !important;
-    padding: 8px 0px !important;
+    background: rgba(20, 25, 50, 0.8) !important;
+    border-top: 1px solid rgba(79, 70, 229, 0.3) !important;
+    padding: 12px 16px !important;
+    backdrop-filter: blur(5px);
 }
-
 input[type="text"] {
-    background-color: #0f0f0f !important;
-    color: white !important;
-    font-size: 14px !important;
-    border-radius: 8px !important;
-    border: 1px solid #2a2a2a !important;
+    background: rgba(30, 35, 60, 0.9) !important;
+    color: #d9e0ee !important;
+    font-size: 15px !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(79, 70, 229, 0.3) !important;
+    padding: 12px !important;
+    transition: all 0.2s ease;
 }
-
+input::placeholder {
+    color: #6b7280 !important;
+}
 input:focus {
-    border: 1px solid #555 !important;
+    border-color: #7dd3fc !important;
+    box-shadow: 0 0 8px rgba(125, 211, 252, 0.4) !important;
     outline: none !important;
-    box-shadow: none !important;
 }
 
-.css-1c7y2kd {
-    margin-bottom: 12px !important;
+/* Selectbox (module selector) */
+.stSelectbox > div {
+    background: rgba(30, 35, 60, 0.9) !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(79, 70, 229, 0.3) !important;
+    color: #d9e0ee !important;
+}
+.stSelectbox > div > div > div {
+    background: rgba(30, 35, 60, 0.9) !important;
+    color: #d9e0ee !important;
+}
+.stSelectbox > div:hover {
+    border-color: #7dd3fc !important;
+}
+.stSelectbox label {
+    color: #d9e0ee !important;
+    font-weight: 500;
+}
+
+/* Expander (e.g., "View Full Section") */
+.stExpander {
+    background: rgba(30, 35, 60, 0.9) !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(79, 70, 229, 0.3) !important;
+    margin: 12px 0;
+}
+.stExpander > summary {
+    background: rgba(40, 45, 70, 0.8) !important;
+    color: #d9e0ee !important;
+    padding: 12px !important;
+    border-radius: 10px !important;
+    transition: background 0.2s ease;
+}
+.stExpander > summary:hover {
+    background: rgba(50, 55, 80, 0.8) !important;
+}
+.stExpander > summary > span {
+    font-weight: 500;
+    color: #7dd3fc !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(30, 35, 60, 0.9);
+}
+::-webkit-scrollbar-thumb {
+    background: #7dd3fc;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #b4e1ff;
 }

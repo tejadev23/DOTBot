@@ -214,33 +214,45 @@ def show_contractor_results(results):
         source = res.get("Source", {})
         st.caption(f"📄 Source: {source.get('Doc', 'Unknown')} – Row {source.get('Row', '?')}")
 
-def show_specification_results(results):
+def show_specification_results(results, return_text=False):
+    output = []
+    
     for spec in results:
-        st.subheader(f"📘 Section {spec['section_id']} – {spec['section_title']}")
-        st.markdown(f"**Reference**: 2021 GDOT Standard Specifications, Page {spec['page_number']}")
-
-        # Initialize content to display
+        # Section header
+        section_header = f"#### 📘 Section {spec['section_id']} – {spec['section_title']}"
+        reference = f"**Reference**: 2021 GDOT Standard Specifications, Page {spec['page_number']}"
+        
+        # Initialize content
         content = spec.get("content", "")
         
-        # If subsections exist, format them
+        # Format subsections
+        subsection_text = ""
         if spec.get("subsections"):
             subsections = spec["subsections"]
             for sub_id, sub_data in subsections.items():
-                content += f"\n\n**{sub_id} {sub_data['title']}**\n{sub_data['content']}"
-                # Add tables if present
-                if sub_data.get("tables"):
-                    for table in sub_data["tables"]:
-                        for table_part in table:
-                            st.table(table_part)
-
-        # Show short preview (first 800 characters)
+                subsection_text += f"\n\n**{sub_id} {sub_data['title']}**\n{sub_data['content']}"
+        
+        content += subsection_text
+        
+        # Create preview (first 800 characters)
         preview = content[:800].strip()
         preview = re.sub(r'\s+', ' ', preview)
-        st.markdown(f"> {preview}...")
-
-        # Show full content under expander
-        with st.expander("🔍 View Full Section"):
-            st.markdown(content)
+        preview_text = f"> {preview}..."
+        
+        # Combine for text output
+        if return_text:
+            section_output = f"{section_header}\n{reference}\n{preview_text}\n\n**Full Section**:\n{content}"
+            output.append(section_output)
+        else:
+            # Render to Streamlit
+            st.subheader(f"📘 Section {spec['section_id']} – {spec['section_title']}")
+            st.markdown(reference)
+            st.markdown(preview_text)
+            with st.expander("🔍 View Full Section"):
+                st.markdown(content)
+    
+    if return_text:
+        return "\n\n".join(output)
 
 # ------------------------- STANDARDS SEARCH -------------------------
 def search_standards(query):
@@ -386,12 +398,11 @@ if query:
     if module == "Contractor Directory":
         results = search_contractors(query)
         if results:
-           response = "\n\n".join(
-    [f"🏗️ **{r.get('Vendor Name', 'Unknown')}** – "
-     f"Work Class: {', '.join(r.get('Work Classes', []))}, "
-     f"Expiry: {r.get('Prequalification Expiry', 'N/A')}" for r in results]
-)
-
+            response = "\n\n".join(
+                [f"🏗️ **{r.get('Vendor Name', 'Unknown')}** – "
+                 f"Work Class: {', '.join(r.get('Work Classes', []))}, "
+                 f"Expiry: {r.get('Prequalification Expiry', 'N/A')}" for r in results]
+            )
         else:
             response = "⚠️ No matching contractors found."
 
